@@ -4,6 +4,10 @@ import { getTransactions } from "../../api/transactions";
 import { getMerchantsDetails } from "../../api/merchants";
 import type { Transaction, MerchantDetail } from "../../types/transaction";
 
+// 🆕 정렬 타입 정의
+type SortField = "paymentCode" | "merchantName" | "amount" | "payType" | "status" | "paymentAt";
+type SortOrder = "asc" | "desc";
+
 export default function Transactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [merchants, setMerchants] = useState<MerchantDetail[]>([]);
@@ -15,7 +19,14 @@ export default function Transactions() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // 데이터 불러오기
+  // 페이지네이션 상태
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // 🆕 정렬 상태
+  const [sortField, setSortField] = useState<SortField>("paymentAt");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -40,10 +51,33 @@ export default function Transactions() {
     fetchData();
   }, []);
 
-  // 가맹점명 찾기 헬퍼 함수
   const getMerchantName = (mchtCode: string) => {
     const merchant = merchants.find((m) => m.mchtCode === mchtCode);
     return merchant?.mchtName || mchtCode;
+  };
+
+  // 🆕 정렬 핸들러
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // 같은 필드 클릭 시 순서 변경
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      // 다른 필드 클릭 시 해당 필드로 오름차순
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
+  // 🆕 정렬 아이콘 렌더링
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <span className="text-gray-400 ml-1">⇅</span>;
+    }
+    return sortOrder === "asc" ? (
+      <span className="text-blue-600 ml-1">↑</span>
+    ) : (
+      <span className="text-blue-600 ml-1">↓</span>
+    );
   };
 
   // 필터링된 데이터
@@ -55,7 +89,60 @@ export default function Transactions() {
     return matchesSearch && matchesStartDate && matchesEndDate;
   });
 
-  // 상태별 색상
+  // 🆕 정렬된 데이터
+  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortField) {
+      case "paymentCode":
+        aValue = a.paymentCode;
+        bValue = b.paymentCode;
+        break;
+      case "merchantName":
+        aValue = getMerchantName(a.mchtCode);
+        bValue = getMerchantName(b.mchtCode);
+        break;
+      case "amount":
+        aValue = parseInt(a.amount);
+        bValue = parseInt(b.amount);
+        break;
+      case "payType":
+        aValue = a.payType;
+        bValue = b.payType;
+        break;
+      case "status":
+        aValue = a.status;
+        bValue = b.status;
+        break;
+      case "paymentAt":
+        aValue = new Date(a.paymentAt).getTime();
+        bValue = new Date(b.paymentAt).getTime();
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentTransactions = sortedTransactions.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, startDate, endDate, sortField, sortOrder]);
+
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "SUCCESS":
@@ -71,7 +158,6 @@ export default function Transactions() {
     }
   };
 
-  // 결제 수단 한글 변환
   const getPayTypeLabel = (payType: string) => {
     const labels: Record<string, string> = {
       ONLINE: "온라인",
@@ -135,10 +221,29 @@ export default function Transactions() {
           >
             초기화
           </button>
+
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="border px-3 py-2 rounded-lg ml-auto"
+          >
+            <option value={10}>10개씩</option>
+            <option value={20}>20개씩</option>
+            <option value={50}>50개씩</option>
+            <option value={100}>100개씩</option>
+          </select>
         </div>
-        <p className="text-sm text-gray-500">
-          총 {filteredTransactions.length}건의 거래
-        </p>
+        <div className="flex justify-between items-center">
+          <p className="text-sm text-gray-500">
+            총 {sortedTransactions.length}건의 거래
+          </p>
+          <p className="text-sm text-gray-500">
+            {startIndex + 1} - {Math.min(endIndex, sortedTransactions.length)}번째 표시 중
+          </p>
+        </div>
       </div>
 
       {/* Table */}
@@ -146,24 +251,55 @@ export default function Transactions() {
         <table className="w-full">
           <thead className="bg-gray-100 border-b">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">결제 코드</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">가맹점명</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">금액</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">결제 수단</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">상태</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">결제일시</th>
+              {/* 🆕 클릭 가능한 헤더 */}
+              <th
+                onClick={() => handleSort("paymentCode")}
+                className="px-4 py-3 text-left text-sm font-medium text-gray-600 cursor-pointer hover:bg-gray-200 select-none"
+              >
+                결제 코드 <SortIcon field="paymentCode" />
+              </th>
+              <th
+                onClick={() => handleSort("merchantName")}
+                className="px-4 py-3 text-left text-sm font-medium text-gray-600 cursor-pointer hover:bg-gray-200 select-none"
+              >
+                가맹점명 <SortIcon field="merchantName" />
+              </th>
+              <th
+                onClick={() => handleSort("amount")}
+                className="px-4 py-3 text-left text-sm font-medium text-gray-600 cursor-pointer hover:bg-gray-200 select-none"
+              >
+                금액 <SortIcon field="amount" />
+              </th>
+              <th
+                onClick={() => handleSort("payType")}
+                className="px-4 py-3 text-left text-sm font-medium text-gray-600 cursor-pointer hover:bg-gray-200 select-none"
+              >
+                결제 수단 <SortIcon field="payType" />
+              </th>
+              <th
+                onClick={() => handleSort("status")}
+                className="px-4 py-3 text-left text-sm font-medium text-gray-600 cursor-pointer hover:bg-gray-200 select-none"
+              >
+                상태 <SortIcon field="status" />
+              </th>
+              <th
+                onClick={() => handleSort("paymentAt")}
+                className="px-4 py-3 text-left text-sm font-medium text-gray-600 cursor-pointer hover:bg-gray-200 select-none"
+              >
+                결제일시 <SortIcon field="paymentAt" />
+              </th>
             </tr>
           </thead>
 
           <tbody>
-            {filteredTransactions.length === 0 ? (
+            {currentTransactions.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                   조건에 맞는 거래 내역이 없습니다.
                 </td>
               </tr>
             ) : (
-              filteredTransactions.map((tx) => (
+              currentTransactions.map((tx) => (
                 <tr key={tx.paymentCode} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm text-gray-700">{tx.paymentCode}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">
@@ -189,6 +325,52 @@ export default function Transactions() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+          >
+            이전
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+            if (
+              page === 1 ||
+              page === totalPages ||
+              (page >= currentPage - 2 && page <= currentPage + 2)
+            ) {
+              return (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-3 py-1 border rounded ${
+                    currentPage === page
+                      ? "bg-blue-600 text-white"
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            } else if (page === currentPage - 3 || page === currentPage + 3) {
+              return <span key={page}>...</span>;
+            }
+            return null;
+          })}
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+          >
+            다음
+          </button>
+        </div>
+      )}
     </div>
   );
 }
