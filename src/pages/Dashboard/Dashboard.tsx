@@ -1,7 +1,7 @@
 // src/pages/Dashboard/Dashboard.tsx
 import React, { useEffect, useState } from "react";
-import { getTransactions } from "../../api/transactions";
-import type { Transaction } from "../../types/transaction";
+import { getPayments } from "../../api/payments";
+import type { Payments } from "../../types/payments";
 import {
   LineChart,
   Line,
@@ -19,16 +19,16 @@ import {
 } from "recharts";
 
 export default function Dashboard() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [payments, setpayments] = useState<Payments[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getTransactions();
-        setTransactions(data);
+        const data = await getPayments();
+        setpayments(data);
       } catch (error) {
-        console.error("Failed to fetch transactions", error);
+        console.error("Failed to fetch payments", error);
       } finally {
         setLoading(false);
       }
@@ -37,10 +37,10 @@ export default function Dashboard() {
   }, []);
 
   // 통계 계산
-  const totalCount = transactions.length;
-  const successCount = transactions.filter((tx) => tx.status === "SUCCESS").length;
+  const totalCount = payments.length;
+  const successCount = payments.filter((tx) => tx.status === "SUCCESS").length;
   const successRate = totalCount > 0 ? ((successCount / totalCount) * 100).toFixed(1) : "0";
-  const totalAmount = transactions.reduce((sum, tx) => sum + parseInt(tx.amount), 0);
+  const totalAmount = payments.reduce((sum, tx) => sum + parseInt(tx.amount), 0);
 
   // 📊 차트 데이터 가공
 
@@ -48,7 +48,7 @@ export default function Dashboard() {
   const getDailyData = () => {
     const dailyMap = new Map<string, number>();
     
-    transactions.forEach((tx) => {
+    payments.forEach((tx) => {
       const date = new Date(tx.paymentAt).toLocaleDateString("ko-KR", {
         month: "short",
         day: "numeric",
@@ -66,7 +66,7 @@ export default function Dashboard() {
   const getPayTypeData = () => {
     const payTypeMap = new Map<string, number>();
     
-    transactions.forEach((tx) => {
+    payments.forEach((tx) => {
       const label = {
         ONLINE: "온라인",
         DEVICE: "디바이스",
@@ -85,7 +85,7 @@ export default function Dashboard() {
   const getStatusData = () => {
     const statusMap = new Map<string, number>();
     
-    transactions.forEach((tx) => {
+    payments.forEach((tx) => {
       statusMap.set(tx.status, (statusMap.get(tx.status) || 0) + 1);
     });
 

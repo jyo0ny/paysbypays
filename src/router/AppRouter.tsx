@@ -1,8 +1,9 @@
 // src/router/AppRouter.tsx
 import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../layout/MainLayout";
-import Dashboard from "../pages/Dashboard/Dashboard"
-import Transactions from "../pages/Transactions/Transactions";
+import Dashboard from "../pages/Dashboard/Dashboard";
+import Payments from "../pages/Payments/Payments";
+import Merchants from "../pages/Merchants/Merchants";
 
 export const router = createBrowserRouter([
   {
@@ -10,7 +11,8 @@ export const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       { index: true, element: <Dashboard /> },
-      { path: "transactions", element: <Transactions /> },
+      { path: "payments", element: <Payments /> },
+      { path: "merchants", element: <Merchants /> },
     ],
   },
 ]);

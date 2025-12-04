@@ -1,5 +1,5 @@
-// src/types/transaction.ts
-export interface Transaction {
+// src/types/payments.ts
+export interface Payments {
   paymentCode: string;      // id → paymentCode
   mchtCode: string;         // 가맹점 코드
   amount: string;           // number → string (API 응답이 string)

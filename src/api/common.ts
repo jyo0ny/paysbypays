@@ -18,7 +18,7 @@ interface ApiResponse<T> {
 }
 
 // 결제 상태 코드
-export const getPaymentStatuses = async () => {
+export const getPaymentstatuses = async () => {
   const res = await api.get<ApiResponse<StatusCode[]>>("/common/payment-status/all");
   return res.data.data;
 };

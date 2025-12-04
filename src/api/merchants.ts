@@ -1,6 +1,6 @@
 // src/api/merchants.ts
 import api from "./client";
-import type { Merchant, MerchantDetail } from "../types/transaction";
+import type { Merchant, MerchantDetail } from "../types/payments";
 
 interface ApiResponse<T> {
   status: number;
