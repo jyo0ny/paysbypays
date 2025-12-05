@@ -2,14 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { getPayments } from "../../api/payments";
 import { getMerchantsDetails } from "../../api/merchants";
-import type { Payments, MerchantDetail } from "../../types/payments";
+import type { Payment, MerchantDetail } from "../../types/payments";
 import PaymentDetailModal from "../../components/PaymentsDetailModal";
 
 type SortField = "paymentCode" | "merchantName" | "amount" | "payType" | "status" | "paymentAt";
 type SortOrder = "asc" | "desc";
 
 export default function Payments() {
-  const [payments, setPayments] = useState<Payments[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [merchants, setMerchants] = useState<MerchantDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export default function Payments() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   // 모달 상태
-  const [selectedPayment, setSelectedPayment] = useState<Payments | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [selectedMerchant, setSelectedMerchant] = useState<MerchantDetail | null>(null);
 
   const fetchData = async () => {
@@ -67,7 +67,7 @@ export default function Payments() {
     return merchant?.mchtName || mchtCode;
   };
 
-  const handlePaymentClick = (payment: Payments) => {
+  const handlePaymentClick = (payment: Payment) => {
     const merchant = merchants.find((m) => m.mchtCode === payment.mchtCode);
     setSelectedPayment(payment);
     setSelectedMerchant(merchant || null);

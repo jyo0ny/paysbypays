@@ -1,6 +1,6 @@
 // src/api/payments.ts
 import api from "./client";
-import type { Payments } from "../types/payments";
+import type { Payment } from "../types/payments";
 
 interface ApiResponse<T> {
   status: number;
@@ -9,6 +9,6 @@ interface ApiResponse<T> {
 }
 
 export const getPayments = async () => {
-  const res = await api.get<ApiResponse<Payments[]>>("/payments/list");
+  const res = await api.get<ApiResponse<Payment[]>>("/payments/list");
   return res.data.data;
 }; 

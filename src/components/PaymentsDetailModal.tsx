@@ -1,9 +1,9 @@
 // src/components/PaymentDetailModal.tsx
 import React from "react";
-import type { Payments, MerchantDetail } from "../types/payments";
+import type { Payment, MerchantDetail } from "../types/payments";
 
 interface PaymentDetailModalProps {
-  payment: Payments | null;
+  payment: Payment | null;
   merchant: MerchantDetail | null;
   onClose: () => void;
 }
