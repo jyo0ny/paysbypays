@@ -33,9 +33,6 @@ export default function Dashboard() {
           getPayments(),
           getMerchantsDetails(),
         ]);
-         console.log("💳 전체 결제 데이터:", paymentData.length, "건");
-        console.log("✅ 성공 결제:", paymentData.filter(p => p.status === "SUCCESS").length, "건");
-        console.log("📅 결제 날짜 샘플:", paymentData.slice(0, 3).map(p => p.paymentAt));
         
         setPayments(paymentData);
         setMerchants(merchantData);
@@ -105,10 +102,7 @@ const getDailyData = () => {
   const minDate = new Date(Math.min(...paymentDates));
   const maxDate = new Date(Math.max(...paymentDates));
   
-  console.log("📅 실제 데이터 범위:", {
-    시작: minDate.toISOString().split('T')[0],
-    종료: maxDate.toISOString().split('T')[0]
-  });
+
 
   // 날짜별 Map 생성
   const dailyMap = new Map<string, { amount: number; count: number }>();
@@ -138,9 +132,6 @@ const getDailyData = () => {
     }
   });
 
-  console.log("📊 집계된 일별 데이터 샘플:", 
-    Array.from(dailyMap.entries()).slice(0, 5)
-  );
 
   // 차트용 데이터 변환 (전체 기간 표시)
   return dateList.map((dateStr) => {
@@ -230,7 +221,6 @@ const getDailyData = () => {
   };
 
   const dailyData = getDailyData();
-  console.log("📈 차트 데이터:", dailyData);  
   const topMerchants = getTopMerchants();
   const payTypeData = getPayTypeData();
   const statusData = getStatusData();
